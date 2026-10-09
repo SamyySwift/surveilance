@@ -1,0 +1,19 @@
+# Secrets
+.env
+
+# Biometric data: enrolled face embeddings, photos, alarm/decision snapshots,
+# recorded test clips and evaluation reports (including database backups and
+# SQLite's -wal/-shm files)
+staff.db*
+enrollment_photos/
+snapshots/
+eval/data/
+eval/report*/
+
+# Python
+__pycache__/
+.pytest_cache/
+
+# macOS and tooling
+.DS_Store
+.playwright-mcp/

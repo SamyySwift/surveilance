@@ -1,0 +1,41 @@
+{
+  "description": "MiniFASNet passive liveness models from Silent-Face-Anti-Spoofing, converted to ONNX",
+  "source": "https://github.com/minivision-ai/Silent-Face-Anti-Spoofing",
+  "source_commit": "b6d5f04ad78778917853b25c778acef6d5626d15",
+  "license": "Apache-2.0 (see LICENSE-Silent-Face-Anti-Spoofing)",
+  "converted_at": "2026-10-08T09:49:29+00:00",
+  "converted_with": {
+    "torch": "2.14.1",
+    "onnxruntime": "1.30.0"
+  },
+  "models": [
+    {
+      "file": "minifasnet_v2_scale2.7_80x80.onnx",
+      "source_file": "resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth",
+      "source_sha256": "a5eb02e1843f19b5386b953cc4c9f011c3f985d0ee2bb9819eea9a142099bec0",
+      "onnx_sha256": "67425150cb9311d5f96d18f42bc2ad0b88c3278719fc2b6f1e5002703559474d",
+      "architecture": "MiniFASNetV2",
+      "scale": 2.7,
+      "input_size": [
+        80,
+        80
+      ],
+      "input_format": "BGR, values 0-255, not normalised, NCHW",
+      "live_class_index": 1
+    },
+    {
+      "file": "minifasnet_v1se_scale4.0_80x80.onnx",
+      "source_file": "resources/anti_spoof_models/4_0_0_80x80_MiniFASNetV1SE.pth",
+      "source_sha256": "84ee1d37d96894d5e82de5a57df044ef80a58be2b218b5ed7cdfd875ec2f5990",
+      "onnx_sha256": "a4005ca4453a6f738a123fa5113bcdc1e9f86cf62c4ce132a4c0eff4eb793d6e",
+      "architecture": "MiniFASNetV1SE",
+      "scale": 4.0,
+      "input_size": [
+        80,
+        80
+      ],
+      "input_format": "BGR, values 0-255, not normalised, NCHW",
+      "live_class_index": 1
+    }
+  ]
+}
