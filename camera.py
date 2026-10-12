@@ -288,7 +288,7 @@ class CameraHealth:
 
 
 def _print_mac_cameras():
-    """`python camera.py`: each connected camera, the zone using it, and the sizes it supports."""
+    """`uv run camera.py`: each connected camera, the zone using it, and the sizes it supports."""
     cameras, sizes = mac_cameras(), mac_camera_sizes()
     zones: dict[int, list[str]] = {}
     for zone, value in config.CAMERAS.items():

@@ -4,13 +4,13 @@ Record labelled test clips at a door camera, for eval/run_eval.py.
 Each run records one clip and appends one line to <out>/labels.jsonl:
 
   # Reference photos/clips used to build each person's template
-  python eval/capture.py --zone entrance --kind enroll   --person P01 --seconds 5
+  uv run eval/capture.py --zone entrance --kind enroll   --person P01 --seconds 5
   # The person walking up to the door as they normally would
-  python eval/capture.py --zone entrance --kind genuine  --person P01 --lighting day
+  uv run eval/capture.py --zone entrance --kind genuine  --person P01 --lighting day
   # Someone who isn't enrolled walking up (or presenting P01's badge)
-  python eval/capture.py --zone entrance --kind impostor --person V07 --claimed P01
+  uv run eval/capture.py --zone entrance --kind impostor --person V07 --claimed P01
   # An attack: a photo or screen of P01 held up to the camera
-  python eval/capture.py --zone entrance --kind attack   --person P01 --attack print_matte
+  uv run eval/capture.py --zone entrance --kind attack   --person P01 --attack print_matte
 
 Use stable pseudonymous IDs (P01, V07...) rather than names, and record a
 demographic group with --group only where people have consented to it.

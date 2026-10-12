@@ -81,9 +81,18 @@ nobody in front of it. A broken camera is never silent.
 
 ## Setup
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). It installs
+the Python version in `.python-version` and the exact package versions in
+`uv.lock` into `.venv/`:
+
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
+
+Run every command below with `uv run` (as shown), or activate the
+environment once with `source .venv/bin/activate` and drop the prefix. Add or
+upgrade packages with `uv add <package>` / `uv lock --upgrade-package <package>`,
+not pip, so `pyproject.toml` and `uv.lock` stay in step.
 
 The first run downloads the `buffalo_l` model pack (~280 MB). The liveness
 models are already in `models/liveness/`. `MANIFEST.json` there records
@@ -94,7 +103,7 @@ Set the dashboard/API token in `.env` next to `config.py` (a real environment
 variable of the same name takes precedence):
 
 ```bash
-echo "GATEKEEPER_API_TOKEN=$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" > .env
+echo "GATEKEEPER_API_TOKEN=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(32))')" > .env
 chmod 600 .env
 ```
 
@@ -140,7 +149,7 @@ CAMERAS = {
 ```
 
 To see each connected camera's name and the sizes it supports, run
-`python camera.py`, then set `width`/`height` to the first (widest) size
+`uv run camera.py`, then set `width`/`height` to the first (widest) size
 listed. On a Mac, name webcams as that list (or System Information > Camera)
 shows them rather than by index. OpenCV numbers Mac cameras by their unique ID, so plugging a
 camera in or out (or an iPhone coming into Continuity Camera range)
@@ -171,7 +180,7 @@ enrolled. That captures them in exactly the conditions the system will see
 every day. You can also upload photos in the dashboard, or use the command line:
 
 ```bash
-python enroll.py --name "Jane Doe" --employee-id E1023 --badge-id 40123 --zones entrance,vault jane1.jpg jane2.jpg
+uv run enroll.py --name "Jane Doe" --employee-id E1023 --badge-id 40123 --zones entrance,vault jane1.jpg jane2.jpg
 ```
 
 `--zones` lists the zones from `config.CAMERAS` the person may be in. Access
@@ -179,9 +188,9 @@ is deny-by-default: someone with no zones is "unauthorized" everywhere.
 `--badge-id` is the number the door reader sends.
 
 ```bash
-python manage.py list                      # everyone, with badge, zones and photo count
-python manage.py deactivate "Jane Doe"      # revoke access (e.g. on departure)
-python manage.py badge "Jane Doe" 40123     # link a badge ("" removes it)
+uv run manage.py list                      # everyone, with badge, zones and photo count
+uv run manage.py deactivate "Jane Doe"      # revoke access (e.g. on departure)
+uv run manage.py badge "Jane Doe" 40123     # link a badge ("" removes it)
 ```
 
 ## Connecting the badge reader
@@ -254,10 +263,10 @@ lighting, models or thresholds.
    pseudonymous IDs, and record demographic groups only with consent.
 
    ```bash
-   python eval/capture.py --zone entrance --kind enroll   --person P01 --seconds 5
-   python eval/capture.py --zone entrance --kind genuine  --person P01 --lighting day
-   python eval/capture.py --zone entrance --kind impostor --person V07 --claimed P01
-   python eval/capture.py --zone entrance --kind attack   --person P01 --attack phone_video
+   uv run eval/capture.py --zone entrance --kind enroll   --person P01 --seconds 5
+   uv run eval/capture.py --zone entrance --kind genuine  --person P01 --lighting day
+   uv run eval/capture.py --zone entrance --kind impostor --person V07 --claimed P01
+   uv run eval/capture.py --zone entrance --kind attack   --person P01 --attack phone_video
    ```
 
    - **More people matters more than more clips per person.** Record each
@@ -267,7 +276,7 @@ lighting, models or thresholds.
 2. **Run the evaluation:**
 
    ```bash
-   python eval/run_eval.py --data eval/data --out eval/report
+   uv run eval/run_eval.py --data eval/data --out eval/report
    ```
 
    Open `eval/report/report.html`. Every clip goes through the same pipeline
@@ -301,8 +310,8 @@ Embeddings record which model made them and are never compared across
 models. To try a model:
 
 ```bash
-python reembed.py --recognizer onnx:/models/candidate.onnx       # templates from stored enrollment photos
-python eval/run_eval.py --data eval/data --recognizer onnx:/models/candidate.onnx --out eval/report-candidate
+uv run reembed.py --recognizer onnx:/models/candidate.onnx       # templates from stored enrollment photos
+uv run eval/run_eval.py --data eval/data --recognizer onnx:/models/candidate.onnx --out eval/report-candidate
 ```
 
 Then add its thresholds to `config.MATCH_THRESHOLDS` and set
@@ -317,7 +326,7 @@ decision.
 **Dashboard + API** (two terminals):
 
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8000      # backend, from this directory
+uv run uvicorn server:app --host 0.0.0.0 --port 8000      # backend, from this directory
 cd frontend && npm install && npm run dev          # dashboard
 ```
 
@@ -348,7 +357,7 @@ Open `http://localhost:5173` and sign in with the token. The dashboard shows:
   based on.
 
 **Local window** (one camera, no dashboard):
-`python recognize.py --zone entrance`. It runs the same pipeline and records
+`uv run recognize.py --zone entrance`. It runs the same pipeline and records
 alarms the same way.
 
 ## Alarms and the audit trail
@@ -358,9 +367,22 @@ Each one keeps a snapshot of the frame it was based on. Snapshots show faces,
 so they're saved owner-readable only in `snapshots/` and deleted after
 `SNAPSHOT_RETENTION_DAYS` (30 by default). Every alarm except "info" also
 plays a sound (`ALARM_SOUND_*`), is emailed if Resend is set up (see "Email
-alerts" below) and, if `ALARM_WEBHOOK_URL` is set, POSTs
-`{"reason", "alarm_id", "kind", "severity", "zone", "time"}` to it from a
-background thread.
+alerts" below) and, if `ALARM_WEBHOOK_URL` is set in `.env`, is POSTed to
+that URL as JSON from a background thread, one request per alarm:
+
+```json
+{"reason": "Jane Doe is not authorized for Vault", "alarm_id": 42,
+ "kind": "unauthorized", "title": "Unauthorized person", "severity": "high",
+ "zone": "Vault", "time": 1791234567.8, "time_text": "11 Oct 2026, 14:32:05",
+ "staff_id": 7, "staff_name": "Jane Doe", "track_id": 3,
+ "details": {"reason": "Jane Doe has no access to Vault", "closest_match": "Jane Doe",
+             "match_score": 0.71, "liveness": 0.98, "planarity": "inconclusive"}}
+```
+
+`staff_name` is set only when the person was identified. `details` depends on
+the kind: monitoring alarms carry the match and liveness scores shown above,
+and camera alarms carry none. Snapshots aren't sent. A failed call is logged
+and not retried.
 
 | Kind | When |
 |---|---|
@@ -426,8 +448,7 @@ second. Check the rate with `/api/status` on your hardware and camera count.
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt
-python -m pytest tests
+uv run pytest tests
 ```
 
 The tests use temporary databases, never `staff.db`. They cover:

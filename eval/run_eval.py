@@ -1,8 +1,8 @@
 """
 Measure accuracy on clips recorded at your own doors, and suggest thresholds.
 
-    python eval/run_eval.py --data eval/data --out eval/report
-    python eval/run_eval.py --data eval/data --recognizer onnx:/models/adaface.onnx --out eval/report-adaface
+    uv run eval/run_eval.py --data eval/data --out eval/report
+    uv run eval/run_eval.py --data eval/data --recognizer onnx:/models/adaface.onnx --out eval/report-adaface
 
 Clips come from eval/capture.py (labels.jsonl plus videos; "enroll" items
 may also be still photos). Every probe clip is replayed through the same

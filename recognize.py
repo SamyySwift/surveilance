@@ -3,8 +3,8 @@ Live access-control view in a local window: reads one camera, runs the same
 decision pipeline as the server (pipeline.py), draws each person's status,
 and raises alarms through alarms.py (database + sound + webhook).
 
-    python recognize.py              # first zone in config.CAMERAS
-    python recognize.py --zone vault
+    uv run recognize.py              # first zone in config.CAMERAS
+    uv run recognize.py --zone vault
 
 This is a reference implementation, not a certified security product. See
 README "Before you rely on this operationally".

@@ -3,8 +3,8 @@ Build embeddings for another recognizer from the enrollment photos already
 on disk, so you can switch models (or compare them) without re-enrolling
 everyone.
 
-    python reembed.py --recognizer onnx:/models/adaface_ir101.onnx
-    python reembed.py --recognizer insightface:antelopev2
+    uv run reembed.py --recognizer onnx:/models/adaface_ir101.onnx
+    uv run reembed.py --recognizer insightface:antelopev2
 
 New rows are tagged with the recognizer's model_id; existing embeddings are
 kept, so switching config.RECOGNIZER back and forth is safe. Photos that

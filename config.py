@@ -197,8 +197,11 @@ SNAPSHOT_DIR = os.path.join(BASE_DIR, "snapshots")
 SNAPSHOT_RETENTION_DAYS = 30
 
 # --- Alarm outputs ---
-# Called on every alarm. Point this at your real siren/notification system.
-ALARM_WEBHOOK_URL = None  # e.g. "https://your-security-system/api/alarm"
+# Every alarm except "info" is POSTed as JSON to this URL (README "Alarms and
+# the audit trail" lists the fields), e.g. an n8n workflow that forwards it to
+# WhatsApp. Set it in .env, not here:
+#   ALARM_WEBHOOK_URL=https://n8n.example.com/webhook/<id>
+ALARM_WEBHOOK_URL = os.environ.get("ALARM_WEBHOOK_URL") or None
 
 # Play an audible sound on every alarm trigger.
 ALARM_SOUND_ENABLED = True

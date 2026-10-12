@@ -7,7 +7,7 @@ trail, and a WebSocket that streams live camera frames + face detections to
 the React frontend.
 
 Run with:
-    uvicorn server:app --host 0.0.0.0 --port 8000
+    uv run uvicorn server:app --host 0.0.0.0 --port 8000
 """
 
 import asyncio

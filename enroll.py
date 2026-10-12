@@ -2,7 +2,7 @@
 Enroll a staff member's face(s) into the recognition database.
 
 Usage:
-    python enroll.py --name "Jane Doe" --employee-id E1023 --badge-id 40123 \
+    uv run enroll.py --name "Jane Doe" --employee-id E1023 --badge-id 40123 \
         --zones entrance,vault photo1.jpg photo2.jpg
 
 Use 2-5 clear, front-facing photos per person if you can: a few different

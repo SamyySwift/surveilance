@@ -2,9 +2,9 @@
 Small management CLI for the staff database.
 
 Usage:
-    python manage.py list
-    python manage.py deactivate "Jane Doe"
-    python manage.py badge "Jane Doe" 40123      # link a badge (use "" to remove)
+    uv run manage.py list
+    uv run manage.py deactivate "Jane Doe"
+    uv run manage.py badge "Jane Doe" 40123      # link a badge (use "" to remove)
 """
 
 import argparse

@@ -68,11 +68,54 @@ def play_alarm_sound():
         print(f"[warn] Failed to play alarm sound: {e}")
 
 
+# Plain-English names for alarm kinds, for messages read outside the dashboard.
+ALARM_TITLES = {
+    "spoof_suspected": "Possible spoof (photo or screen)",
+    "face_mismatch": "Face doesn't match badge",
+    "unauthorized": "Unauthorized person",
+    "tailgating": "Possible tailgating",
+    "multiple_faces": "More than one person at the door",
+    "unknown_person": "Unknown person",
+    "unverifiable": "Face not visible",
+    "unknown_badge": "Unknown badge",
+    "suspended_badge": "Suspended badge used",
+    "access_denied": "Access denied",
+    "liveness_unavailable": "Liveness check unavailable",
+    "camera_offline": "Camera offline",
+    "camera_frozen": "Camera frozen",
+    "camera_obstructed": "Camera covered or blinded",
+    "camera_moved": "Camera moved",
+    "processing_error": "Processing error",
+}
+
+
 def _post_webhook(payload: dict):
     try:
-        requests.post(config.ALARM_WEBHOOK_URL, json=payload, timeout=3)
+        # raise_for_status: an unregistered URL (e.g. an n8n test URL nobody
+        # is listening on) answers 404, which would otherwise pass silently.
+        requests.post(config.ALARM_WEBHOOK_URL, json=payload, timeout=3).raise_for_status()
     except requests.RequestException as e:
         print(f"  [warn] Failed to call alarm webhook: {e}")
+
+
+def _webhook_payload(alarm_id: int, kind: str, severity: str, zone: Optional[str], staff_id: Optional[int],
+                     track_id: Optional[int], details: Optional[dict]) -> dict:
+    """What the webhook is told about an alarm (notify() adds the message as "reason")."""
+    now = time.time()
+    staff = database.get_staff_by_id(staff_id) if staff_id is not None else None
+    return {
+        "alarm_id": alarm_id,
+        "kind": kind,
+        "title": ALARM_TITLES.get(kind, kind.replace("_", " ").capitalize()),
+        "severity": severity,
+        "zone": zone,
+        "time": now,
+        "time_text": time.strftime("%d %b %Y, %H:%M:%S", time.localtime(now)),
+        "staff_id": staff_id,
+        "staff_name": staff["name"] if staff is not None else None,
+        "track_id": track_id,
+        "details": details or {},
+    }
 
 
 def notify(reason: str, payload: Optional[dict] = None):
@@ -171,8 +214,7 @@ def record_alarm(kind: str, severity: str, message: str, zone: Optional[str] = N
     alarm_id = database.add_alarm(kind, severity, message, zone=zone, staff_id=staff_id,
                                   track_id=track_id, snapshot=snapshot, details=details)
     if severity != "info":
-        notify(message, {"alarm_id": alarm_id, "kind": kind, "severity": severity, "zone": zone,
-                         "time": time.time()})
+        notify(message, _webhook_payload(alarm_id, kind, severity, zone, staff_id, track_id, details))
         email_report.alarm_raised(alarm_id)
     else:
         print(f"[info] {message}")
