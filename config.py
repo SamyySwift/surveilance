@@ -59,7 +59,7 @@ EXECUTION_PROVIDERS = _default_providers()
 # degree webcam gives ~37 px. See README "Camera and lighting".
 CAMERAS = {
     "Entrance": {"source": "USB Camera", "width": 1920, "height": 1080},
-    "Vault": {"source": "FaceTime HD Camera", "width": 1920, "height": 1080},
+    "Vault": {"source": "SamSwift Camera", "width": 1920, "height": 1080},
     "Lobby": {"source": "2M WebCam", "width": 1280, "height": 720},  # this camera's maximum
 }
 
@@ -202,6 +202,11 @@ SNAPSHOT_RETENTION_DAYS = 30
 # WhatsApp. Set it in .env, not here:
 #   ALARM_WEBHOOK_URL=https://n8n.example.com/webhook/<id>
 ALARM_WEBHOOK_URL = os.environ.get("ALARM_WEBHOOK_URL") or None
+# Attach the alarm's snapshot (JPEG, base64) to the webhook call. Off unless
+# ALARM_WEBHOOK_SNAPSHOT=true in .env: snapshots show faces, and whatever
+# receives the webhook (and any chat app it forwards to) keeps its own copy,
+# beyond SNAPSHOT_RETENTION_DAYS.
+ALARM_WEBHOOK_SNAPSHOT = (os.environ.get("ALARM_WEBHOOK_SNAPSHOT") or "").strip().lower() in ("1", "true", "yes")
 
 # Play an audible sound on every alarm trigger.
 ALARM_SOUND_ENABLED = True

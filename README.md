@@ -381,8 +381,15 @@ that URL as JSON from a background thread, one request per alarm:
 
 `staff_name` is set only when the person was identified. `details` depends on
 the kind: monitoring alarms carry the match and liveness scores shown above,
-and camera alarms carry none. Snapshots aren't sent. A failed call is logged
-and not retried.
+and camera alarms carry none. A failed call is logged and not retried.
+
+With `ALARM_WEBHOOK_SNAPSHOT=true` in `.env`, the alarm's snapshot (the
+frame with the face boxed, JPEG, at most 1280 px wide) is attached as
+`snapshot_base64`, with `snapshot_name` and `snapshot_mime_type`
+(`"image/jpeg"`). All three are `null` when the setting is off or the alarm
+has no snapshot (e.g. `camera_offline`). It's off by default because
+snapshots show faces, and whatever receives the webhook keeps its own copy,
+outside `SNAPSHOT_RETENTION_DAYS`.
 
 | Kind | When |
 |---|---|

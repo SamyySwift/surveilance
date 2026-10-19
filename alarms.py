@@ -11,6 +11,7 @@ Snapshots show people's faces, so they live in config.SNAPSHOT_DIR with
 owner-only permissions and are deleted after config.SNAPSHOT_RETENTION_DAYS.
 """
 
+import base64
 import os
 import platform
 import shutil
@@ -93,16 +94,28 @@ def _post_webhook(payload: dict):
     try:
         # raise_for_status: an unregistered URL (e.g. an n8n test URL nobody
         # is listening on) answers 404, which would otherwise pass silently.
-        requests.post(config.ALARM_WEBHOOK_URL, json=payload, timeout=3).raise_for_status()
+        requests.post(config.ALARM_WEBHOOK_URL, json=payload, timeout=10).raise_for_status()
     except requests.RequestException as e:
         print(f"  [warn] Failed to call alarm webhook: {e}")
 
 
+def _webhook_snapshot(snapshot: Optional[str]) -> Optional[str]:
+    """The snapshot as base64, if the webhook should get it and there is one."""
+    if not (config.ALARM_WEBHOOK_URL and config.ALARM_WEBHOOK_SNAPSHOT):
+        return None
+    path = snapshot_path(snapshot)
+    if path is None:
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("ascii")
+
+
 def _webhook_payload(alarm_id: int, kind: str, severity: str, zone: Optional[str], staff_id: Optional[int],
-                     track_id: Optional[int], details: Optional[dict]) -> dict:
+                     track_id: Optional[int], details: Optional[dict], snapshot: Optional[str]) -> dict:
     """What the webhook is told about an alarm (notify() adds the message as "reason")."""
     now = time.time()
     staff = database.get_staff_by_id(staff_id) if staff_id is not None else None
+    image = _webhook_snapshot(snapshot)
     return {
         "alarm_id": alarm_id,
         "kind": kind,
@@ -115,6 +128,9 @@ def _webhook_payload(alarm_id: int, kind: str, severity: str, zone: Optional[str
         "staff_name": staff["name"] if staff is not None else None,
         "track_id": track_id,
         "details": details or {},
+        "snapshot_name": snapshot if image else None,
+        "snapshot_mime_type": "image/jpeg" if image else None,
+        "snapshot_base64": image,
     }
 
 
@@ -214,7 +230,7 @@ def record_alarm(kind: str, severity: str, message: str, zone: Optional[str] = N
     alarm_id = database.add_alarm(kind, severity, message, zone=zone, staff_id=staff_id,
                                   track_id=track_id, snapshot=snapshot, details=details)
     if severity != "info":
-        notify(message, _webhook_payload(alarm_id, kind, severity, zone, staff_id, track_id, details))
+        notify(message, _webhook_payload(alarm_id, kind, severity, zone, staff_id, track_id, details, snapshot))
         email_report.alarm_raised(alarm_id)
     else:
         print(f"[info] {message}")
